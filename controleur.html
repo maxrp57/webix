@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Contrôleur Statut Flux Discord</title>
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex items-center justify-center p-4 sm:p-6 font-sans antialiased selection:bg-indigo-500 selection:text-white">
+
+  <div class="w-full max-w-2xl bg-slate-900 border border-slate-800 rounded-2xl p-6 sm:p-8 shadow-2xl space-y-6">
+    
+    <!-- En-tête -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-slate-800">
+      <div>
+        <div class="flex items-center gap-2.5">
+          <span class="relative flex h-3 w-3">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-3 w-3 bg-indigo-500"></span>
+          </span>
+          <h1 class="text-lg font-bold text-slate-100">Changer l'État du Flux</h1>
+        </div>
+        <p class="text-xs text-slate-400 mt-1">Salon Discord : <span class="font-mono text-indigo-400">#1551159592094797936</span></p>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <span class="text-xs text-slate-400 font-medium">Statut actuel :</span>
+        <div id="current-status-pill" class="flex items-center gap-2 px-3 py-1 rounded-full bg-slate-950 border border-slate-700 text-xs font-semibold text-slate-200">
+          <span id="current-status-text">Non défini</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3 Boutons de Statut -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+      <!-- Vert -->
+      <button type="button" id="btn-status-green" onclick="handleSendStatus('🟢')" class="text-left p-4 rounded-xl border border-slate-800 bg-slate-950/70 hover:border-emerald-500/60 hover:bg-slate-800/40 transition-all duration-200 group relative">
+        <div class="flex items-center gap-3 mb-2">
+          <span class="text-3xl transition-transform group-hover:scale-110">🟢</span>
+          <div>
+            <h3 class="text-sm font-bold text-slate-100 font-mono">Etat du flux : 🟢</h3>
+            <p class="text-[11px] text-slate-400">En Ligne (Actif)</p>
+          </div>
+        </div>
+        <p class="text-xs text-slate-400 mt-2">Le flux diffuse en direct sans interruption.</p>
+        <div class="mt-4 pt-3 border-t border-slate-800 flex items-center justify-between text-xs text-emerald-400 font-medium">
+          <span id="action-label-green">Envoyer / Modifier</span>
+          <span class="text-slate-500 text-[11px]">1 clic</span>
+        </div>
+      </button>
+
+      <!-- Jaune -->
+      <button type="button" id="btn-status-yellow" onclick="handleSendStatus('🟡')" class="text-left p-4 rounded-xl border border-slate-800 bg-slate-950/70 hover:border-amber-500/60 hover:bg-slate-800/40 transition-all duration-200 group relative">
+        <div class="flex items-center gap-3 mb-2">
+          <span class="text-3xl transition-transform group-hover:scale-110">🟡</span>
+          <div>
+            <h3 class="text-sm font-bold text-slate-100 font-mono">Etat du flux : 🟡</h3>
+            <p class="text-[11px] text-slate-400">En Pause / Attente</p>
+          </div>
+        </div>
+        <p class="text-xs text-slate-400 mt-2">Le flux démarre ou est en pause.</p>
+        <div class="mt-4 pt-3 border-t border-slate-800 flex items-center justify-between text-xs text-amber-400 font-medium">
+          <span id="action-label-yellow">Envoyer / Modifier</span>
+          <span class="text-slate-500 text-[11px]">1 clic</span>
+        </div>
+      </button>
+
+      <!-- Rouge -->
+      <button type="button" id="btn-status-red" onclick="handleSendStatus('🔴')" class="text-left p-4 rounded-xl border border-slate-800 bg-slate-950/70 hover:border-rose-500/60 hover:bg-slate-800/40 transition-all duration-200 group relative">
+        <div class="flex items-center gap-3 mb-2">
+          <span class="text-3xl transition-transform group-hover:scale-110">🔴</span>
+          <div>
+            <h3 class="text-sm font-bold text-slate-100 font-mono">Etat du flux : 🔴</h3>
+            <p class="text-[11px] text-slate-400">Hors Ligne (Coupé)</p>
+          </div>
+        </div>
+        <p class="text-xs text-slate-400 mt-2">Le flux est éteint ou inaccessible.</p>
+        <div class="mt-4 pt-3 border-t border-slate-800 flex items-center justify-between text-xs text-rose-400 font-medium">
+          <span id="action-label-red">Envoyer / Modifier</span>
+          <span class="text-slate-500 text-[11px]">1 clic</span>
+        </div>
+      </button>
+    </div>
+
+    <!-- Options & Bouton Nouveau Message -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs pt-1">
+      <label class="flex items-center gap-2 cursor-pointer select-none text-slate-300">
+        <input type="checkbox" id="check-embed" checked class="w-4 h-4 rounded bg-slate-950 border-slate-700 text-indigo-600 focus:ring-indigo-500" />
+        <span>Inclure l'embed Discord (carte colorée et timestamp)</span>
+      </label>
+
+      <div class="flex items-center gap-2">
+        <button type="button" id="btn-force-new" onclick="forceNewMessage()" class="hidden px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 font-medium transition">
+          Nouveau message
+        </button>
+        <span id="loading-indicator" class="hidden text-indigo-400 font-medium animate-pulse">Envoi en cours vers Discord...</span>
+      </div>
+    </div>
+
+    <!-- Alertes Feedback -->
+    <div id="feedback-alert" class="hidden p-3.5 rounded-xl text-xs flex items-center gap-2.5">
+      <span id="feedback-icon">✓</span>
+      <span id="feedback-text">Message mis à jour</span>
+    </div>
+
+    <!-- Infos de suivi -->
+    <div id="tracking-info" class="text-[11px] text-slate-500 text-right space-y-0.5">
+      <div id="info-last-update"></div>
+      <div id="info-message-id"></div>
+    </div>
+
+  </div>
+
+  <script>
+    // Configuration Discord pré-intégrée
+    const DISCORD_BOT_TOKEN = "MTU1MTIyNDg2NTQzNTAzMzY5MA.GHwJnq.bYuJjNLcxR53ezKNo8LecbhrTpswEIXpnP5t5Y";
+    const DISCORD_CHANNEL_ID = "1551159592094797936";
+
+    // État mémorisé dans le navigateur pour modifier le message existant
+    let messageId = localStorage.getItem('discord_last_message_id') || '';
+    let currentStatus = localStorage.getItem('discord_last_status') || '';
+    let lastUpdated = localStorage.getItem('discord_last_updated') || null;
+
+    function updateUI() {
+      const textEl = document.getElementById('current-status-text');
+      if (currentStatus) {
+        textEl.textContent = `Etat du flux : ${currentStatus}`;
+      } else {
+        textEl.textContent = 'Non défini';
+      }
+
+      const btnForce = document.getElementById('btn-force-new');
+      if (messageId) {
+        btnForce.classList.remove('hidden');
+      } else {
+        btnForce.classList.add('hidden');
+      }
+
+      const actionText = messageId ? 'Modifier' : 'Envoyer';
+      document.getElementById('action-label-green').textContent = actionText;
+      document.getElementById('action-label-yellow').textContent = actionText;
+      document.getElementById('action-label-red').textContent = actionText;
+
+      const infoDate = document.getElementById('info-last-update');
+      const infoMsg = document.getElementById('info-message-id');
+      if (lastUpdated) {
+        infoDate.textContent = `Dernière mise à jour : ${new Date(lastUpdated).toLocaleTimeString('fr-FR')}`;
+        infoMsg.textContent = messageId ? `Message ID : ${messageId}` : '';
+      } else {
+        infoDate.textContent = '';
+        infoMsg.textContent = '';
+      }
+
+      // Bordure sur le bouton sélectionné
+      ['green', 'yellow', 'red'].forEach(c => {
+        document.getElementById(`btn-status-${c}`).classList.remove('ring-2', 'ring-emerald-500', 'ring-amber-500', 'ring-rose-500', 'bg-slate-900');
+      });
+      if (currentStatus === '🟢') document.getElementById('btn-status-green').classList.add('ring-2', 'ring-emerald-500', 'bg-slate-900');
+      if (currentStatus === '🟡') document.getElementById('btn-status-yellow').classList.add('ring-2', 'ring-amber-500', 'bg-slate-900');
+      if (currentStatus === '🔴') document.getElementById('btn-status-red').classList.add('ring-2', 'ring-rose-500', 'bg-slate-900');
+    }
+
+    function showFeedback(type, message) {
+      const box = document.getElementById('feedback-alert');
+      const icon = document.getElementById('feedback-icon');
+      const text = document.getElementById('feedback-text');
+
+      box.classList.remove('hidden', 'bg-emerald-500/10', 'border-emerald-500/20', 'text-emerald-300', 'bg-rose-500/10', 'border-rose-500/20', 'text-rose-300');
+      
+      if (type === 'success') {
+        box.classList.add('bg-emerald-500/10', 'border', 'border-emerald-500/20', 'text-emerald-300');
+        icon.textContent = '✓';
+      } else {
+        box.classList.add('bg-rose-500/10', 'border', 'border-rose-500/20', 'text-rose-300');
+        icon.textContent = '✗';
+      }
+
+      text.textContent = message;
+    }
+
+    function buildPayload(status, useEmbed) {
+      const content = `Etat du flux : ${status}`;
+      if (!useEmbed) return { content, embeds: [] };
+
+      let color = 0x10b981; // Vert
+      let title = '🟢 Flux En Ligne';
+      let description = 'Le flux diffuse en direct sans interruption.';
+
+      if (status === '🟡') {
+        color = 0xf59e0b; // Jaune
+        title = '🟡 Flux En Pause / Attente';
+        description = 'Le flux démarre ou est momentanément en pause.';
+      } else if (status === '🔴') {
+        color = 0xf43f5e; // Rouge
+        title = '🔴 Flux Hors Ligne';
+        description = 'Le flux est éteint, terminé ou inaccessible.';
+      }
+
+      return {
+        content,
+        embeds: [
+          {
+            title,
+            description,
+            color,
+            fields: [
+              { name: 'Statut', value: `**${status}** (Etat du flux : ${status})`, inline: true },
+            ],
+            footer: { text: 'Contrôleur de Flux Discord' },
+            timestamp: new Date().toISOString(),
+          },
+        ],
+      };
+    }
+
+    function forceNewMessage() {
+      messageId = '';
+      localStorage.removeItem('discord_last_message_id');
+      updateUI();
+      showFeedback('success', 'Prêt à envoyer un nouveau message dans le salon.');
+    }
+
+    async function callDiscord(endpoint, method, body) {
+      const targetUrl = `https://discord.com/api/v10${endpoint}`;
+      // On tente d'abord en direct, puis via un proxy CORS si le navigateur bloque les requêtes locales
+      try {
+        const res = await fetch(targetUrl, {
+          method,
+          headers: {
+            'Authorization': `Bot ${DISCORD_BOT_TOKEN}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(body),
+        });
+        return res;
+      } catch (e) {
+        // En cas de blocage CORS par le navigateur sur file://
+        const proxyUrl = `https://corsproxy.io/?url=${encodeURIComponent(targetUrl)}`;
+        return await fetch(proxyUrl, {
+          method,
+          headers: {
+            'Authorization': `Bot ${DISCORD_BOT_TOKEN}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(body),
+        });
+      }
+    }
+
+    async function handleSendStatus(status) {
+      const loading = document.getElementById('loading-indicator');
+      loading.classList.remove('hidden');
+
+      const useEmbed = document.getElementById('check-embed').checked;
+      const payload = buildPayload(status, useEmbed);
+      const shouldEdit = Boolean(messageId);
+
+      const endpoint = shouldEdit
+        ? `/channels/${DISCORD_CHANNEL_ID}/messages/${messageId}`
+        : `/channels/${DISCORD_CHANNEL_ID}/messages`;
+      const method = shouldEdit ? 'PATCH' : 'POST';
+
+      try {
+        const res = await callDiscord(endpoint, method, payload);
+
+        if (!res.ok) {
+          if (shouldEdit && res.status === 404) {
+            // Le message a été supprimé sur Discord : on recrée automatiquement un message
+            messageId = '';
+            localStorage.removeItem('discord_last_message_id');
+            return handleSendStatus(status);
+          }
+          const errText = await res.text();
+          throw new Error(`Erreur Discord (${res.status}) : ${errText}`);
+        }
+
+        const data = await res.json();
+        currentStatus = status;
+        messageId = data.id || messageId;
+        lastUpdated = new Date().toISOString();
+
+        localStorage.setItem('discord_last_status', currentStatus);
+        localStorage.setItem('discord_last_message_id', messageId);
+        localStorage.setItem('discord_last_updated', lastUpdated);
+
+        updateUI();
+        showFeedback('success', shouldEdit 
+          ? `Message modifié avec succès : "Etat du flux : ${status}"` 
+          : `Nouveau message envoyé avec succès : "Etat du flux : ${status}"`
+        );
+      } catch (err) {
+        console.error(err);
+        showFeedback('error', err.message || 'Impossible d\'envoyer vers Discord');
+      } finally {
+        loading.classList.add('hidden');
+      }
+    }
+
+    // Initialisation
+    updateUI();
+  </script>
+</body>
+</html>
