@@ -1,0 +1,6 @@
+{
+  "name": "Contrôleur Statut Flux Discord",
+  "description": "Pilotez votre bot Discord pour envoyer et modifier en direct le message d'état du flux (vert, rouge, jaune) dans le salon de votre choix.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
